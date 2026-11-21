@@ -1,0 +1,38 @@
+fn samplequota_min2(a: f64, b: f64) -> f64 {
+    if a < b {
+        return a;
+    }
+    b
+}
+
+fn samplequota_finite(values: vector) -> bool {
+    let mut i = 0;
+    while i < len(values) {
+        let value = at(values, i);
+        if !(value - value == 0.0) {
+            return false;
+        }
+        i += 1;
+    }
+    true
+}
+
+fn samplequota_compute(important: f64, ordinary: f64, capacity: f64) -> vector {
+    if important + ordinary > 9007199254740991.0 {
+        return [];
+    }
+    let first = samplequota_min2(important, capacity);
+    let rest = samplequota_min2(ordinary, capacity - first);
+    [first, rest, important + ordinary - first - rest]
+}
+
+// Allocate a bounded log buffer with higher priority for important records.
+// Returns [important retained, ordinary retained, dropped]. This computes counts for a host that selects individual records in arrival order.
+pub fn samplequota_plan(important: f64, ordinary: f64, capacity: f64) -> vector {
+    if !(important >= 0.0 && important <= 9007199254740991.0 && important % 1.0 == 0.0) { return []; }
+    if !(ordinary >= 0.0 && ordinary <= 9007199254740991.0 && ordinary % 1.0 == 0.0) { return []; }
+    if !(capacity >= 0.0 && capacity <= 9007199254740991.0 && capacity % 1.0 == 0.0) { return []; }
+    let result = samplequota_compute(important, ordinary, capacity);
+    if !samplequota_finite(result) { return []; }
+    result
+}
